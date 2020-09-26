@@ -162,18 +162,8 @@ async function main() {
 	window.location.href = url;
 }
 
-/*
-window.addEventListener("load", () => {
-	try {
-	*/
-		main().then(done => {
-			// Success!
-		}, err => {
-			console.error(err);
-		});
-	/*
-	} catch (err) {
-		console.error(err);
-	}
+main().then(done => {
+	// Success!
+}, err => {
+	console.error(err);
 });
-*/

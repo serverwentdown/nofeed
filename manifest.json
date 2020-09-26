@@ -1,11 +1,11 @@
 {
 	"manifest_version": 2,
 	"name": "Nofeed",
-	"version": "1",
+	"version": "3",
 	"description": "Disable social feeds. Go feed yourself.",
 	"icons": {
-		"48": "icon.48.png",
-		"96": "icon.96.png"
+		"48": "img/icon.48.png",
+		"96": "img/icon.96.png"
 	},
 	"permissions": [
 		"storage"
@@ -16,17 +16,17 @@
 			"https://twitter.com/*"
 		],
 		"js": [
-			"redirect.js"
+			"src/redirect.js"
 		]
 	}],
 	"browser_specific_settings": {
 		"gecko": {
 			"id": "addon@nofeed.makerforce.io",
-			"strict_min_version": "42.0"
+			"strict_min_version": "48.0"
 		}
 	},
 	"options_ui": {
-		"page": "options.html",
+		"page": "src/options.html",
 		"browser_style": true,
 		"chrome_style": true
 	}
