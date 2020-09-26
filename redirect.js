@@ -1,32 +1,49 @@
 console.log("hello, world!")
 
-const cleanup_map = {
-	"twitter.com": {
-		clean: async function () {
-			const sidebar = document.querySelector("[role=banner] [role=navigation]");
-			if (!sidebar) {
-				return null;
+const sites = {
+	"youtube": {
+		_hosts: ["www.youtube.com"],
+		_bad_urls: ["https://www.youtube.com/"],
+		_default: "subscriptions",
+		subscriptions: async function () {
+			return "/feed/subscriptions";
+		},
+		_clean: async function () {
+			const sidebar_mini = document.querySelector('ytd-mini-guide-renderer > div');
+			if (sidebar_mini) {
+				sidebar_mini.childNodes.forEach(item => {
+					const link = item.querySelector("a");
+					if (link && link.href && link.href.endsWith("youtube.com/")) {
+						sidebar_mini.removeChild(item);
+					}
+				});
 			}
 
-			sidebar.childNodes.forEach(item => {
-				if (item.href && item.href.endsWith("/home")) {
-					sidebar.removeChild(item);
-				}
+			const sidebar = document.querySelector('ytd-guide-section-renderer > div');
+			if (sidebar) {
+				sidebar.childNodes.forEach(item => {
+					const link = item.querySelector("a");
+					if (link && link.href && link.href.endsWith("youtube.com/")) {
+						sidebar.removeChild(item);
+					}
+				});
+			}
+
+			const logos = document.querySelectorAll('ytd-topbar-logo-renderer a');
+			logos.forEach(item => {
+				item.style.pointerEvents = "none";
 			});
 
-			const heading = document.querySelector("[role=banner] [role=heading]");
-			if (!heading) {
-				return null;
+			const home = document.querySelector('[page-subtype=home]');
+			if (home) {
+				home.style.display = "none";
 			}
-			heading.querySelector('[href="/home"]').style.pointerEvents = "none";
 		},
 	},
-};
-
-const page_map = {
-	"https://twitter.com/home": {
-		name: "twitter",
-		default: "lists",
+	"twitter": {
+		_hosts: ["twitter.com"],
+		_bad_urls: ["https://twitter.com/home"],
+		_default: "lists",
 		lists: async function () {
 			const sidebar = document.querySelector("[role=navigation]");
 			if (!sidebar) {
@@ -40,6 +57,31 @@ const page_map = {
 				}
 			});
 			return url;
+		},
+		_clean: async function () {
+			const sidebar = document.querySelector("[role=banner] [role=navigation]");
+			if (sidebar) {
+				sidebar.childNodes.forEach(item => {
+					if (item.href && item.href.endsWith("/home")) {
+						sidebar.removeChild(item);
+					}
+				});
+			}
+
+			const heading = document.querySelector("[role=banner] [role=heading]");
+			if (heading) {
+				const logo = heading.querySelector('[href="/home"]');
+				if (logo) {
+					logo.style.pointerEvents = "none";
+				}
+			}
+
+			if (window.location.href.endsWith("/home")) {
+				const timeline = document.querySelector('main [role=region]');
+				if (timeline) {
+					timeline.style.display = "none";
+				}
+			}
 		},
 	},
 };
@@ -68,33 +110,51 @@ async function wait_dom_content_loaded() {
 
 async function main() {
 	const current_host = window.location.host;
-	const cleanup_configuration = cleanup_map[current_host];
 
-	// Run cleanup scripts
-	await cleanup_configuration.clean();
+	let site_name = null;
+	for (let k in sites) {
+		if (sites[k]._hosts.indexOf(current_host) >= 0) {
+			site_name = k;
+		}
+	}
+	let site = sites[site_name];
 
-	const current_url = window.location.href;
-	const page_configuration = page_map[current_url];
-	if (!page_configuration) {
-		console.debug(`skipping ${current_url}`);
+	if (!site) {
+		console.debug(`site ${current_host} not found`);
 		return;
 	}
 
 	// Obtain user configuration
-	let mode = await get_config_one(page_configuration.name);
+	let mode = await get_config_one(site_name + "-mode");
 	if (!mode) {
-		mode = page_configuration.default;
+		mode = site._default;
 		console.debug(`mode not set. using default mode ${mode}`);
 	}
-	const mode_options = await get_config_one(page_configuration.name + "-" + mode + "-options");
+	const mode_options = await get_config_one(site_name + "-mode-" + mode + "-options");
 	console.debug(`mode ${mode} options ${mode_options}`);
 
 	if (mode === "disabled") {
 		return;
 	}
 
+	// Run cleanup scripts
+	await site._clean();
+	setInterval(async () => {
+		await site._clean();
+	}, 1000);
+
+
+	const current_url = window.location.href;
+	if (site._bad_urls.indexOf(current_url) < 0) {
+		console.debug(`url is not bad`);
+		return;
+	}
+
 	// Run the chosen mode
-	const url = await page_configuration[mode](mode_options);
+	if (!site[mode]) {
+		return;
+	}
+	const url = await site[mode](mode_options);
 	console.debug(`new url ${url}`);
 	if (!url) {
 		return;
@@ -102,10 +162,18 @@ async function main() {
 	window.location.href = url;
 }
 
+/*
 window.addEventListener("load", () => {
-	main().then(done => {
-		// Success!
-	}, err => {
+	try {
+	*/
+		main().then(done => {
+			// Success!
+		}, err => {
+			console.error(err);
+		});
+	/*
+	} catch (err) {
 		console.error(err);
-	});
+	}
 });
+*/
