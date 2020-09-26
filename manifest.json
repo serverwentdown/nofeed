@@ -1,0 +1,34 @@
+{
+	"manifest_version": 2,
+	"name": "Nofeed",
+	"version": "1",
+	"description": "Disable feeds. Go feed yourself.",
+	"icons": {
+		"48": "icon.48.png",
+		"96": "icon.96.png"
+	},
+	"permissions": [
+		"storage"
+	],
+	"content_scripts": [{
+		"matches": [
+			"https://www.youtube.com/*",
+			"https://twitter.com/*"
+		],
+		"js": [
+			"redirect.js"
+		]
+	}],
+	"browser_specific_settings": {
+		"gecko": {
+			"id": "addon@nofeed.makerforce.io",
+			"strict_min_version": "42.0"
+		}
+	},
+	"options_ui": {
+		"page": "options.html",
+		"browser_style": true,
+		"chrome_style": true
+	}
+}
+		
