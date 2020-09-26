@@ -22,7 +22,7 @@
 	"browser_specific_settings": {
 		"gecko": {
 			"id": "addon@nofeed.makerforce.io",
-			"strict_min_version": "48.0"
+			"strict_min_version": "70.0"
 		}
 	},
 	"options_ui": {

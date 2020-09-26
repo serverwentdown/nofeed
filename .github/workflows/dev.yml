@@ -13,7 +13,8 @@ jobs:
       
       - name: Bump manifest version
         run: |
-          sed -i "s/\"version\": \"\(.*\)\",/\"version\": \"\1.$(date +%s)\",/g" manifest.json
+          sed -i "s/\"version\": \"\(.*\)\",/\"version\": \"\1.$(( ($(date +%s)/60/60) - ($(date -d '2020-01-01' +%s)/60/60) ))\",/g" manifest.json
+          cat manifest.json
 
       - name: Build and sign Firefox Extension
         run: |
